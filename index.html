@@ -9,17 +9,49 @@
     body { display:flex; flex-direction:column; min-height:100vh; }
     .container { flex:1; display:flex; flex-direction:column; justify-content:space-between; padding:40px 20px 0; box-sizing:border-box; }
     header h1 { font-size:4.5rem; margin:0; color:#ff0000; font-weight:900; letter-spacing:2px; text-align:center; }
-    .catchphrase { font-size:2.2rem; margin:20px 0 60px; text-align:center; }
+    .catchphrase { font-size:2.2rem; margin:20px 0 40px; text-align:center; }
     .catchphrase em { font-style:italic; }
     .catchphrase strong { font-weight:800; }
-    .main-text { font-size:1.35rem; line-height:1.8; max-width:800px; margin:0 auto; text-align:center; }
+
+    /* ←←← NEW WEEKLY WINNER BOX →→→ */
+    .weekly-winner {
+      margin: 40px auto;
+      max-width: 900px;
+      border: 4px solid #ff0000;
+      border-radius: 12px;
+      background: rgba(255,0,0,0.08);
+      padding: 20px;
+      text-align: center;
+    }
+    .weekly-winner h2 {
+      margin: 0 0 20px 0;
+      font-size: 2.2rem;           /* same as catchphrase */
+      color: #ffd700;              /* gold */
+      font-weight: 800;
+    }
+    .weekly-winner .winner-text {
+      font-size: 1.35rem;          /* same as main-text */
+      line-height: 1.8;
+      color: #ffffff;
+      word-wrap: break-word;
+    }
+    .weekly-winner .no-winner {
+      color: #aaa;
+      font-style: italic;
+    }
+    /* ←←← END NEW BOX →→→ */
+
+    .main-text { font-size:1.35rem; line-height:1.8; max-width:800px; margin:0 auto 60px; text-align:center; }
     .main-text .highlight { font-size:1.55rem; font-weight:600; margin:30px 0; display:block; }
     footer { background:#1c1c1c; padding:20px 0; text-align:center; }
     footer a { color:#fff; text-decoration:none; margin:0 30px; font-size:1rem; opacity:0.9; }
     footer a:hover { opacity:1; text-decoration:underline; }
+
     @media (max-width:640px) {
       header h1 { font-size:3rem; }
       .catchphrase { font-size:1.7rem; }
+      .weekly-winner h2 { font-size:1.7rem; }
+      .weekly-winner .winner-text { font-size:1.15rem; }
       .main-text { font-size:1.15rem; }
       .main-text .highlight { font-size:1.35rem; }
       footer a { margin:0 15px; font-size:0.95rem; }
@@ -32,6 +64,14 @@
       <h1>TrashIt</h1>
       <div class="catchphrase"><em>Rant</em> away, <strong>everyday!</strong></div>
     </header>
+
+    <!-- WEEKLY WINNER BOX -->
+    <div class="weekly-winner">
+      <h2>Last Week's Trash</h2>
+      <div class="winner-text" id="winnerDisplay">
+        Loading last week's winner…
+      </div>
+    </div>
 
     <main class="main-text">
       <div>Something bothering you? Got a gripe? Angry at the world?</div>
@@ -49,5 +89,39 @@
       <a href="privacy-policy.html">Privacy Statement</a>
     </footer>
   </div>
+
+  <!-- Supabase Script – THIS IS THE FINAL WORKING VERSION -->
+  <!-- Supabase Script – FIXED & BULLETPROOF VERSION -->
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const display = document.getElementById('winnerDisplay');
+    display.textContent = 'Loading winner…';
+
+    // This is the official, guaranteed-correct way (straight from Supabase docs)
+    const supabase = window.supabase.createClient(
+      'https://cxcmaaawupyxtmkfapzf.supabase.co',   // ← your real project URL
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN4Y21hYWF3dXB5eHRta2ZhcHpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1MzQ2MzEsImV4cCI6MjA3OTExMDYzMX0.kp3UG6HME7J-96e-KkcMErFJ5IWNqlFP87aGTwtFMds'                        // ← your real anon key
+    );
+
+    async function loadWinner() {
+      const { data, error } = await supabase
+        .from('weekly_winners')
+        .select('phrase_text')
+        .order('id', { ascending: false })
+        .limit(1);
+
+      console.log('Supabase →', { data, error });
+
+      if (data && data[0]) {
+        display.textContent = data[0].phrase_text.trim();
+      } else {
+        display.textContent = error ? 'Error' : 'No winner yet';
+      }
+    }
+
+    // Run it
+    loadWinner();
+  </script>
 </body>
 </html>
