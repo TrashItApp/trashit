@@ -8,12 +8,40 @@
     html, body { margin:0; padding:0; height:100%; background:#000; color:#fff; font-family:'Segoe UI', Arial, sans-serif; }
     body { display:flex; flex-direction:column; min-height:100vh; }
     .container { flex:1; display:flex; flex-direction:column; justify-content:space-between; padding:40px 20px 0; box-sizing:border-box; }
-    header h1 { font-size:4.5rem; margin:0; color:#ff0000; font-weight:900; letter-spacing:2px; text-align:center; }
+    
+    header { text-align:center; }
+    
+    /* Make the links inline-block so they only take the width of the text */
+    .title-link {
+      display: inline-block;     /* <-- this prevents full-width stretching */
+      text-decoration: none;
+      color: inherit;
+    }
+    header h1 { 
+      font-size:4.5rem; 
+      margin:0 0 8px 0; 
+      color:#ff0000; 
+      font-weight:900; 
+      letter-spacing:2px;
+      transition: transform 0.2s;
+    }
+    header h1:hover { transform:scale(1.05); }
+
+    .enter-text {
+      display: block;            /* makes it sit on its own line, centered */
+      margin: 8px auto 0;
+      font-size:1rem;
+      color:#1E90FF;
+      font-weight:600;
+      text-decoration:none;
+    }
+    .enter-text:hover { text-decoration:underline; }
+
     .catchphrase { font-size:2.2rem; margin:20px 0 40px; text-align:center; }
     .catchphrase em { font-style:italic; }
     .catchphrase strong { font-weight:800; }
 
-    /* ←←← NEW WEEKLY WINNER BOX →→→ */
+    /* WEEKLY WINNER BOX */
     .weekly-winner {
       margin: 40px auto;
       max-width: 900px;
@@ -25,21 +53,16 @@
     }
     .weekly-winner h2 {
       margin: 0 0 20px 0;
-      font-size: 2.2rem;           /* same as catchphrase */
-      color: #ffd700;              /* gold */
+      font-size: 2.2rem;
+      color: #ffd700;
       font-weight: 800;
     }
     .weekly-winner .winner-text {
-      font-size: 1.35rem;          /* same as main-text */
+      font-size: 1.35rem;
       line-height: 1.8;
       color: #ffffff;
       word-wrap: break-word;
     }
-    .weekly-winner .no-winner {
-      color: #aaa;
-      font-style: italic;
-    }
-    /* ←←← END NEW BOX →→→ */
 
     .main-text { font-size:1.35rem; line-height:1.8; max-width:800px; margin:0 auto 60px; text-align:center; }
     .main-text .highlight { font-size:1.55rem; font-weight:600; margin:30px 0; display:block; }
@@ -61,7 +84,14 @@
 <body>
   <div class="container">
     <header>
-      <h1>TrashIt</h1>
+      <!-- Clickable title – only as wide as the text -->
+      <a href="app.html" class="title-link">
+        <h1>TrashIt</h1>
+      </a>
+      
+      <!-- Small blue clickable text -->
+      <a href="app.html" class="enter-text">Click to enter!!</a>
+
       <div class="catchphrase"><em>Rant</em> away, <strong>everyday!</strong></div>
     </header>
 
@@ -69,7 +99,7 @@
     <div class="weekly-winner">
       <h2>Last Week's Trash</h2>
       <div class="winner-text" id="winnerDisplay">
-        Loading last week's winner…
+        Loading trash…
       </div>
     </div>
 
@@ -79,7 +109,7 @@
       <div>Others may have the same issue and want to rant too.</div>
       <div class="highlight">
         Every week, the most trashed word or phrase will get selected<br>
-        and displayed to everyone on the main page.
+        and displayed to the world on the main page.
       </div>
     </main>
 
@@ -90,18 +120,15 @@
     </footer>
   </div>
 
-  <!-- Supabase Script – THIS IS THE FINAL WORKING VERSION -->
-  <!-- Supabase Script – FIXED & BULLETPROOF VERSION -->
-  <!-- Supabase CDN -->
+  <!-- Supabase Script -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const display = document.getElementById('winnerDisplay');
-    display.textContent = 'Loading winner…';
+    display.textContent = 'Loading trash…';
 
-    // This is the official, guaranteed-correct way (straight from Supabase docs)
     const supabase = window.supabase.createClient(
-      'https://cxcmaaawupyxtmkfapzf.supabase.co',   // ← your real project URL
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN4Y21hYWF3dXB5eHRta2ZhcHpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1MzQ2MzEsImV4cCI6MjA3OTExMDYzMX0.kp3UG6HME7J-96e-KkcMErFJ5IWNqlFP87aGTwtFMds'                        // ← your real anon key
+      'https://cxcmaaawupyxtmkfapzf.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN4Y21hYWF3dXB5eHRta2ZhcHpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1MzQ2MzEsImV4cCI6MjA3OTExMDYzMX0.kp3UG6HME7J-96e-KkcMErFJ5IWNqlFP87aGTwtFMds' // your real anon key
     );
 
     async function loadWinner() {
@@ -111,8 +138,6 @@
         .order('id', { ascending: false })
         .limit(1);
 
-      console.log('Supabase →', { data, error });
-
       if (data && data[0]) {
         display.textContent = data[0].phrase_text.trim();
       } else {
@@ -120,7 +145,6 @@
       }
     }
 
-    // Run it
     loadWinner();
   </script>
 </body>
