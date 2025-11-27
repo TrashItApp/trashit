@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrashIt</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Main content grows → pushes footer down */
+        main {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 800px;
+            text-align: center;
+            padding-top: 8vh;
+        }
+
+        /* ←←← ALL YOUR ORIGINAL STYLES →→→ */
+        h1 {font-size:6rem;color:#ff0000;margin:0 0 20px 0;letter-spacing:4px;text-shadow:0 0 20px rgba(255,0,0,0.4);}
+        .catchphrase {font-size:1.8rem;margin:30px 0 50px 0;min-height:60px;transition:opacity .6s;}
+        .input-container {position:relative;margin-bottom:0;max-width:620px;margin-left:auto;margin-right:auto;}
+        #trashInput {width:100%;max-width:620px;padding:20px 60px 20px 25px;font-size:1.4rem;background:#333;color:#fff;border:3px solid #ff0000;border-radius:20px;outline:none;box-sizing:border-box;}
+        #trashInput::placeholder {color:#999;}
+        .clear-btn {position:absolute;right:12px;top:50%;transform:translateY(-50%);background:#ffff00;color:#000;border:none;width:42px;height:42px;border-radius:50%;font-size:28px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+        .clear-btn:hover {background:#ffff66;}
+        .last-week {background:#1a0000;border:3px solid #ff0000;border-radius:20px;padding:30px;margin:40px auto 10vh;max-width:620px;}
+        .last-week h2 {margin:0 0 20px 0;font-size:2.2rem;color:#ffff00;}
+        .last-week p {margin:0;font-size:1.8rem;color:#ffff00;}
+        .submit-wrapper {max-width:620px;margin:20px auto 0;text-align:center;}
+        .submit-btn {width:200px;padding:16px 0;font-size:1.4rem;font-weight:bold;color:#fff;background:#ff0000;border:none;border-radius:16px;cursor:pointer;transition:all .3s;}
+        .submit-btn:disabled {background:#660000;cursor:not-allowed;}
+        #timer {margin-top:8px;font-size:14px;color:#ff3366;font-weight:bold;}
+        .lists-wrapper {display:flex;gap:40px;width:90%;max-width:1000px;margin:80px auto 0;flex-wrap:wrap;justify-content:center;}
+        .trash-column {flex:1;min-width:300px;}
+        .column-title {font-size:2rem;font-weight:bold;text-align:center;margin-bottom:20px;}
+        .this-week {color:#ff8800;}
+        .previous {color:#ffff00;}
+        .trash-list {background:#222;border-radius:16px;padding:20px;max-height:60vh;overflow-y:auto;}
+        .trash-item {color:#fff;font-size:1.3rem;padding:12px 0;border-bottom:1px solid #333;cursor:pointer;transition:background .2s;}
+        .trash-item:hover {background:#333;border-radius:8px;padding-left:10px;padding-right:10px;}
+        .trash-item:last-child {border-bottom:none;}
+
+        /* Clean sticky footer – never breaks anything */
+        footer {
+            background: #1c1c1c;
+            padding: 20px 0;
+            text-align: center;
+        }
+        footer a {
+            color: #fff;
+            text-decoration: none;
+            margin: 0 30px;
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        footer a:hover {opacity: 1; text-decoration: underline;}
+
+        @media (max-width:768px) {
+            h1 {font-size:4rem;}
+            .catchphrase {font-size:1.4rem;}
+            #trashInput {font-size:1.2rem;}
+            footer a {margin:0 15px;}
+        }
+        @media (max-width:480px) {
+            footer a {display:block;margin:12px 0;}
+        }
+    </style>
+</head>
+<body>
+
+    <!-- This grows and centers everything -->
+    <main>
+        <div class="container">
+            <h1>TrashIt</h1>
+            <div class="catchphrase" id="catchphrase">Tell the world how you feel.</div>
+
+            <div class="input-container">
+                <input type="text" id="trashInput" placeholder="Input your trash here." maxlength="140">
+                <button class="clear-btn" id="clearBtn">×</button>
+            </div>
+
+            <div class="submit-wrapper">
+                <button id="submitBtn" class="submit-btn">Submit</button>
+                <div id="timer"></div>
+            </div>
+
+            <div class="last-week">
+                <h2>Last Week's Trash</h2>
+                <p id="winnerDisplay">Loading…</p>
+            </div>
+
+            <div class="lists-wrapper">
+                <div class="trash-column">
+                    <h2 class="column-title this-week">This Week's Trash</h2>
+                    <div class="trash-list" id="thisWeekList"></div>
+                </div>
+                <div class="trash-column">
+                    <h2 class="column-title previous">Previous Winners</h2>
+                    <div class="trash-list" id="previousList"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer always at bottom, no overlap, no JS interference -->
+    <footer>
+        <a href="index.html">Home</a>
+        <a href="contact.html">Contact</a>
+        <a href="terms.html">Terms Of Service</a>
+        <a href="privacy-policy.html">Privacy Statement</a>
+    </footer>
+
+    <!-- Supabase + Full Working Script (100% unchanged & now loads perfectly) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const supabase = window.supabase.createClient(
+            'https://cxcmaaawupyxtmkfapzf.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN4Y21hYWF3dXB5eHRta2ZhcHpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1MzQ2MzEsImV4cCI6MjA3OTExMDYzMX0.kp3UG6HME7J-96e-KkcMErFJ5IWNqlFP87aGTwtFMds'
+        );
+
+        const winnerEl      = document.getElementById('winnerDisplay');
+        const thisWeekEl    = document.getElementById('thisWeekList');
+        const previousEl    = document.getElementById('previousList');
+        const catchphraseEl = document.getElementById('catchphrase');
+        const input         = document.getElementById('trashInput');
+        const btn           = document.getElementById('submitBtn');
+        const timerEl       = document.getElementById('timer');
+
+        let currentWeekId = null;
+        let weekStartDate = null;
+
+        function fillAndScroll(text) {
+            input.value = text;
+            input.focus();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function startCountdown(endTime) {
+            btn.disabled = true;
+            btn.textContent = 'Locked';
+            const update = () => {
+                const left = Math.max(0, Math.round((endTime - Date.now()) / 1000));
+                if (left === 0) {
+                    btn.disabled = false;
+                    btn.textContent = 'Submit';
+                    timerEl.textContent = '';
+                    return;
+                }
+                const h = String(Math.floor(left / 3600)).padStart(2, '0');
+                const m = String(Math.floor((left % 3600) / 60)).padStart(2, '0');
+                const s = String(left % 60).padStart(2, '0');
+                timerEl.textContent = `Next submission in ${h}:${m}:${s}`;
+                requestAnimationFrame(update);
+            };
+            update();
+        }
+
+        async function loadEverything() {
+            const { data: active } = await supabase.from('current_week').select('id, week_start_date').eq('is_active', true).single();
+            currentWeekId = active?.id || 1;
+            weekStartDate = active?.week_start_date || '2025-11-24';
+            const nice = new Date(weekStartDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+            catchphraseEl.textContent = `Week of ${nice} — let it rip`;
+
+            const { data: last } = await supabase.from('weekly_winners').select('phrase_text').order('created_at', { ascending: false }).limit(1);
+            winnerEl.textContent = last?.[0]?.phrase_text?.trim() || 'No winner yet';
+
+            const weekStartISO = new Date(weekStartDate + 'T00:00:00.000Z').toISOString();
+            const { data: current } = await supabase.from('phrases').select('phrase_text').gte('created_at', weekStartISO).order('created_at', { ascending: false });
+            const unique = [...new Set(current?.map(p => p.phrase_text.trim()) || [])];
+
+            thisWeekEl.innerHTML = unique.length ? '' : '<div class="trash-item" style="color:#999;font-style:italic;">No trash yet — be the first</div>';
+            unique.forEach(t => {
+                const div = document.createElement('div');
+                div.className = 'trash-item';
+                div.innerHTML = t.replace(/\n/g, '<br>');
+                div.onclick = () => fillAndScroll(t);
+                thisWeekEl.appendChild(div);
+            });
+
+            const { data: allWinners } = await supabase.from('weekly_winners').select('phrase_text').order('created_at', { ascending: false });
+            previousEl.innerHTML = '';
+            allWinners?.forEach(w => {
+                const div = document.createElement('div');
+                div.className = 'trash-item';
+                div.innerHTML = w.phrase_text.trim().replace(/\n/g, '<br>');
+                div.onclick = () => fillAndScroll(w.phrase_text.trim());
+                previousEl.appendChild(div);
+            });
+
+            const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(navigator.userAgent + location.href))
+                .then(buf => Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join(''));
+
+            const { data: lastSubmission } = await supabase.from('phrases').select('created_at').eq('ip_hash', hash).order('created_at', { ascending: false }).limit(1);
+            if (lastSubmission?.[0]) {
+                const unlockTime = new Date(lastSubmission[0].created_at).getTime() + 24*60*60*1000;
+                if (Date.now() < unlockTime) startCountdown(unlockTime);
+            }
+        }
+
+        btn.onclick = async () => {
+            const text = input.value.trim();
+            if (!text || text.length > 140) return alert('1–140 characters only');
+            btn.disabled = true; btn.textContent = 'Submitting…';
+            const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(navigator.userAgent + location.href))
+                .then(buf => Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join(''));
+            const { error } = await supabase.from('phrases').insert({
+                phrase_text: text,
+                ip_hash: hash,
+                phase_id: currentWeekId
+            });
+            if (error) { alert('Error: '+error.message); btn.disabled=false; btn.textContent='Submit'; return; }
+            input.value = '';
+            btn.textContent = 'Submitted!';
+            startCountdown(Date.now() + 24*60*60*1000);
+            setTimeout(() => location.reload(), 1500);
+        };
+
+        document.getElementById('clearBtn').onclick = () => input.value = '';
+
+        const phrases = ["Tell the world how you feel.","Rant away, everyday!","Dump your trash here.","No filter, just feelings.","Let it all out."];
+        let i = 0;
+        setInterval(() => {
+            i = (i + 1) % phrases.length;
+            catchphraseEl.style.opacity = 0;
+            setTimeout(() => { catchphraseEl.textContent = phrases[i]; catchphraseEl.style.opacity = 1; }, 600);
+        }, 5000);
+
+        loadEverything();
+    </script>
+</body>
+</html>
