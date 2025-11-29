@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TrashIt - Rant away, everyday!</title>
+  <style>
+    html, body { 
+      margin:0; padding:0; height:100%; 
+      background:#000; color:#fff; 
+      font-family:'Segoe UI', Arial, sans-serif; 
+    }
+    body { 
+      display:flex; flex-direction:column; 
+      min-height:100vh;               /* ensures footer stays at bottom even with long content */
+    }
+    .container { 
+      flex:1; 
+      display:flex; 
+      flex-direction:column; 
+      padding:40px 20px 60px;         /* increased bottom padding a bit for symmetry */
+      box-sizing:border-box; 
+    }
+    
+    header { text-align:center; }
+    
+    .title-link { display:inline-block; text-decoration:none; color:inherit; }
+    header h1 { 
+      font-size:4.5rem; margin:0 0 8px 0; color:#ff0000; 
+      font-weight:900; letter-spacing:2px; transition:transform .2s;
+    }
+    header h1:hover { transform:scale(1.05); }
+
+    .enter-text {
+      display:block; margin:8px auto 0; font-size:1rem; 
+      color:#1E90FF; font-weight:600; text-decoration:none;
+    }
+    .enter-text:hover { text-decoration:underline; }
+
+    .catchphrase { 
+      font-size:2.2rem; margin:20px 0 20px; text-align:center; 
+    }
+    .catchphrase em { font-style:italic; }
+    .catchphrase strong { font-weight:800; }
+
+    /* Weekly winner grows naturally with content */
+    .weekly-winner {
+      margin:20px auto 50px;           /* consistent spacing */
+      max-width:900px;
+      border:4px solid #ff0000;
+      border-radius:12px;
+      background:rgba(255,0,0,0.08);
+      padding:20px;
+      text-align:center;
+      /* No fixed height → it will expand as much as needed */
+    }
+    .weekly-winner h2 {
+      margin:0 0 20px 0; font-size:2.2rem; color:#ffd700; font-weight:800;
+    }
+    .weekly-winner .winner-text {
+      font-size:1.35rem; line-height:1.8; color:#fff; word-wrap:break-word;
+    }
+
+    .main-text { 
+      font-size:1.35rem; line-height:1.8; max-width:800px; 
+      margin:0 auto 40px; text-align:center;        /* reduced bottom margin */
+    }
+    .main-text .highlight { 
+      font-size:1.55rem; font-weight:600; margin:30px 0; display:block; 
+    }
+
+    /* Donate button – tight, centered, no giant gap above */
+    .donate-btn {
+      display:inline-block;
+      background:#ff0000;
+      color:#fff;
+      font-size:1.4rem;
+      font-weight:700;
+      padding:14px 40px;
+      border-radius:8px;
+      text-decoration:none;
+      transition:all .3s ease;
+      box-shadow:0 4px 12px rgba(255,0,0,.4);
+      margin:0 auto 50px;               /* controls space above/below */
+    }
+    .donate-btn:hover {
+      background:#ff3333;
+      transform:translateY(-3px);
+      box-shadow:0 8px 20px rgba(255,0,0,.6);
+    }
+
+    footer { 
+      background:#1c1c1c; 
+      padding:20px 0; 
+      text-align:center; 
+      margin-top:auto;                  /* pushes footer to bottom when content is short */
+    }
+    footer a { 
+      color:#fff; text-decoration:none; margin:0 30px; 
+      font-size:1rem; opacity:0.9; 
+    }
+    footer a:hover { opacity:1; text-decoration:underline; }
+
+    @media (max-width:640px) {
+      header h1 { font-size:3rem; }
+      .catchphrase { font-size:1.7rem; }
+      .weekly-winner h2 { font-size:1.7rem; }
+      .weekly-winner .winner-text { font-size:1.15rem; }
+      .main-text { font-size:1.15rem; }
+      .main-text .highlight { font-size:1.35rem; }
+      .donate-btn { font-size:1.2rem; padding:12px 30px; }
+      footer a { margin:0 15px; font-size:0.95rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="app.html" class="title-link"><h1>TrashIt</h1></a>
+      <a href="app.html" class="enter-text">Click to enter!!</a>
+      <div class="catchphrase"><em>Rant</em> away, <strong>everyday!</strong></div>
+    </header>
+
+    <div class="weekly-winner">
+      <h2>Last Week's Trash</h2>
+      <div class="winner-text" id="winnerDisplay">Loading trash…</div>
+    </div>
+
+    <main class="main-text">
+      <div>Something bothering you? Got a gripe? Angry at the world?</div>
+      <div>Tell the world about it in a short rant.</div>
+      <div>Others may have the same issue and want to rant too.</div>
+      <div class="highlight">
+        Every week, the most trashed word or phrase will get selected<br>
+        and displayed to the world on the main page.
+      </div>
+    </main>
+
+    <!-- Donate button – now sits close and centered -->
+    <a href="https://buymeacoffee.com/trashitapp" class="donate-btn" target="_blank" rel="noopener">
+      Donate
+    </a>
+
+    <footer>
+      <a href="contact.html">Contact</a>
+      <a href="terms.html">Terms Of Service</a>
+      <a href="privacy-policy.html">Privacy Statement</a>
+    </footer>
+  </div>
+
+  <!-- Supabase Script -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const display = document.getElementById('winnerDisplay');
+    display.textContent = 'Loading trash…';
+
+    const supabase = window.supabase.createClient(
+      'https://cxcmaaawupyxtmkfapzf.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN4Y21hYWF3dXB5eHRta2ZhcHpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1MzQ2MzEsImV4cCI6MjA3OTExMDYzMX0.kp3UG6HME7J-96e-KkcMErFJ5IWNqlFP87aGTwtFMds'
+    );
+
+    async function loadWinner() {
+      const { data, error } = await supabase
+        .from('weekly_winners')
+        .select('phrase_text')
+        .order('id', { ascending: false })
+        .limit(1);
+
+      if (data && data[0]) {
+        display.textContent = data[0].phrase_text.trim();
+      } else {
+        display.textContent = error ? 'Error' : 'No winner yet';
+      }
+    }
+    loadWinner();
+  </script>
+</body>
+</html>
