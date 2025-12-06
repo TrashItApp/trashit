@@ -268,8 +268,15 @@
 
     // FINAL WORKING SUBMIT BUTTON
     btn.onclick = async () => {
-        const text = input.value.trim();
-        if (!text || text.length > 140) return alert('1–140 characters only');
+        let text = input.value.trim();
+    
+        // ←←← THIS IS THE KEY LINE ←←←
+         text = text.toLowerCase();                 // Force lowercase
+        // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+
+        if (!text || text.length > 140) {
+            return alert('1–140 characters only');
+        }
 
         btn.disabled = true;
         btn.textContent = 'Submitting…';
