@@ -161,7 +161,11 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-    const supabase = window.supabase.createClient(
+    // Use the global supabase provided by the CDN
+    const { createClient } = supabase;
+
+    // Create our client instance with a different name
+    const supabaseClient = createClient(
         'https://cxcmaaawupyxtmkfapzf.supabase.co',
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN4Y21hYWF3dXB5eHRta2ZhcHpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1MzQ2MzEsImV4cCI6MjA3OTExMDYzMX0.kp3UG6HME7J-96e-KkcMErFJ5IWNqlFP87aGTwtFMds'
     );
@@ -179,21 +183,21 @@
 
     async function getCurrentPhaseId() {
         if (currentPhaseId !== null) return currentPhaseId;
-        const { data } = await supabase
+        const { data } = await supabaseClient
             .from('phases')
             .select('id')
             .eq('is_active', true)
             .single();
-        currentPhaseId = data.id;
+        currentPhaseId = data?.id || null;
         return currentPhaseId;
     }
 
     async function loadThisWeek() {
         const phaseId = await getCurrentPhaseId();
 
-        const { data: phrases } = await supabase
+        const { data: phrases } = await supabaseClient
             .from('phrases')
-            .select('phrase_text')           // ← fixed the typo here
+            .select('phrase_text')
             .eq('phase_id', phaseId);
 
         const votes = {};
@@ -225,11 +229,20 @@
     }
 
     async function loadEverything() {
-        // Winners
-        const { data: w } = await supabase.from('weekly_winners').select('phrase_text').order('created_at', { ascending: false }).limit(1);
+        // Last week's winner
+        const { data: w } = await supabaseClient
+            .from('weekly_winners')
+            .select('phrase_text')
+            .order('created_at', { ascending: false })
+            .limit(1);
         winnerEl.textContent = w?.[0]?.phrase_text?.trim() || 'No winner yet';
 
-        const { data: all } = await supabase.from('weekly_winners').select('phrase_text').order('created_at', { ascending: false });
+        // All previous winners
+        const { data: all } = await supabaseClient
+            .from('weekly_winners')
+            .select('phrase_text')
+            .order('created_at', { ascending: false });
+
         previousEl.innerHTML = '';
         all?.forEach(x => {
             const el = document.createElement('div');
@@ -241,14 +254,14 @@
 
         await loadThisWeek();
 
-        // ONE-TIME hash + phase (exactly like mobile app)
+        // Generate user hash (same as mobile app)
         const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(navigator.userAgent + location.href));
         userHash = Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2,'0')).join('');
 
-        await getCurrentPhaseId();   // ← ensures currentPhaseId is cached
+        await getCurrentPhaseId(); // ensure cached
 
-        // 24h cooldown
-        const { data: last } = await supabase
+        // 24h cooldown check
+        const { data: last } = await supabaseClient
             .from('phrases')
             .select('created_at')
             .eq('ip_hash', userHash)
@@ -266,13 +279,10 @@
         }
     }
 
-    // FINAL WORKING SUBMIT BUTTON
+    // Submit button
     btn.onclick = async () => {
         let text = input.value.trim();
-    
-        // ←←← THIS IS THE KEY LINE ←←←
-         text = text.toLowerCase();                 // Force lowercase
-        // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+        text = text.toLowerCase(); // Force lowercase
 
         if (!text || text.length > 140) {
             return alert('1–140 characters only');
@@ -282,10 +292,10 @@
         btn.textContent = 'Submitting…';
 
         try {
-            const { error } = await supabase.from('phrases').insert({
+            const { error } = await supabaseClient.from('phrases').insert({
                 phrase_text: text,
-                ip_hash: userHash,        // always valid
-                phase_id: currentPhaseId  // always correct
+                ip_hash: userHash,
+                phase_id: currentPhaseId
             });
 
             if (error) throw error;

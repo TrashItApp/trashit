@@ -12,13 +12,13 @@
     }
     body { 
       display:flex; flex-direction:column; 
-      min-height:100vh;               /* ensures footer stays at bottom even with long content */
+      min-height:100vh;
     }
     .container { 
       flex:1; 
       display:flex; 
       flex-direction:column; 
-      padding:40px 20px 60px;         /* increased bottom padding a bit for symmetry */
+      padding:40px 20px 60px;
       box-sizing:border-box; 
     }
     
@@ -43,16 +43,14 @@
     .catchphrase em { font-style:italic; }
     .catchphrase strong { font-weight:800; }
 
-    /* Weekly winner grows naturally with content */
     .weekly-winner {
-      margin:20px auto 50px;           /* consistent spacing */
+      margin:20px auto 50px;
       max-width:900px;
       border:4px solid #ff0000;
       border-radius:12px;
       background:rgba(255,0,0,0.08);
       padding:20px;
       text-align:center;
-      /* No fixed height → it will expand as much as needed */
     }
     .weekly-winner h2 {
       margin:0 0 20px 0; font-size:2.2rem; color:#ffd700; font-weight:800;
@@ -63,13 +61,12 @@
 
     .main-text { 
       font-size:1.35rem; line-height:1.8; max-width:800px; 
-      margin:0 auto 40px; text-align:center;        /* reduced bottom margin */
+      margin:0 auto 40px; text-align:center;
     }
     .main-text .highlight { 
       font-size:1.55rem; font-weight:600; margin:30px 0; display:block; 
     }
 
-    /* Donate button – tight, centered, no giant gap above */
     .donate-btn {
       display:inline-block;
       background:#ff0000;
@@ -81,7 +78,7 @@
       text-decoration:none;
       transition:all .3s ease;
       box-shadow:0 4px 12px rgba(255,0,0,.4);
-      margin:0 auto 50px;               /* controls space above/below */
+      margin:0 auto 50px;
     }
     .donate-btn:hover {
       background:#ff3333;
@@ -93,7 +90,7 @@
       background:#1c1c1c; 
       padding:20px 0; 
       text-align:center; 
-      margin-top:auto;                  /* pushes footer to bottom when content is short */
+      margin-top:auto;
     }
     footer a { 
       color:#fff; text-decoration:none; margin:0 30px; 
@@ -136,7 +133,6 @@
       </div>
     </main>
 
-    <!-- Donate button – now sits close and centered -->
     <a href="https://buymeacoffee.com/trashitapp" class="donate-btn" target="_blank" rel="noopener">
       Donate
     </a>
@@ -152,15 +148,18 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const display = document.getElementById('winnerDisplay');
-    display.textContent = 'Loading trash…';
 
-    const supabase = window.supabase.createClient(
+    // Use the global supabase from the CDN
+    const { createClient } = supabase;
+
+    // Create our client instance
+    const supabaseClient = createClient(
       'https://cxcmaaawupyxtmkfapzf.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN4Y21hYWF3dXB5eHRta2ZhcHpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1MzQ2MzEsImV4cCI6MjA3OTExMDYzMX0.kp3UG6HME7J-96e-KkcMErFJ5IWNqlFP87aGTwtFMds'
     );
 
     async function loadWinner() {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from('weekly_winners')
         .select('phrase_text')
         .order('id', { ascending: false })
@@ -169,9 +168,10 @@
       if (data && data[0]) {
         display.textContent = data[0].phrase_text.trim();
       } else {
-        display.textContent = error ? 'Error' : 'No winner yet';
+        display.textContent = error ? 'Error loading winner' : 'No winner yet';
       }
     }
+
     loadWinner();
   </script>
 </body>
